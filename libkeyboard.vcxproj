@@ -1,0 +1,61 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="check-env" DefaultTargets="build" ToolsVersion="16.0">
+
+    <!-- Project -->
+    <PropertyGroup>
+        <IncludePath>$(MSBuildProjectDirectory)/include</IncludePath>
+        <SourcePath>$(MSBuildProjectDirectory)/src</SourcePath>
+        <ModulePath>$(MSBuildStartupDirectory)/module</ModulePath>
+        <BuildPath>$(MSBuildStartupDirectory)/build/$(MSBuildProjectName)</BuildPath>
+        <TargetObject>$(BuildPath)/$(MSBuildProjectName).o</TargetObject>
+        <GXX>/usr/bin/g++-7</GXX>
+        <LD>/usr/bin/ld</LD>
+    </PropertyGroup>
+
+    <!-- Includes -->
+    <!-- Add external include here -->
+    <ItemGroup>
+        <Include Include="$(IncludePath)" />
+        <Include Include="$(ModulePath)/libstdcxx/include" />
+    </ItemGroup>
+
+    <!-- Libs -->
+    <!-- Add external lib here -->
+    <ItemGroup>
+        <!-- <Lib Include="" /> -->
+    </ItemGroup>
+
+    <!-- Sources -->
+    <ItemGroup>
+        <Source Include="$(SourcePath)/**/*.cpp">
+            <ObjectPath>$(BuildPath)/%(RecursiveDir)</ObjectPath>
+            <Object>%(ObjectPath)%(Filename).o</Object>
+        </Source>
+    </ItemGroup>
+
+    <!-- Flags -->
+    <PropertyGroup>
+        <CxxFlags>-std=c++17 @(Include -> '-I %(Identity)', ' ') -fno-stack-protector -mcmodel=large -fno-builtin -fno-exceptions -m64 -mgeneral-regs-only -fno-use-cxa-atexit -fno-threadsafe-statics</CxxFlags>
+        <LdFlags>-relocatable</LdFlags>
+    </PropertyGroup>
+
+    <!-- Targets -->
+    <Target Name="build">
+        <Message Text="Building $(MSBuildProjectName)." />
+        <Exec Command="$(GXX) -c %(Source.Identity) -o %(Source.Object) $(CxxFlags)" EchoOff="true" />
+        <Exec Command="$(LD) @(Lib, ' ') @(Source -> '%(Object)', ' ') -o $(TargetObject) $(LdFlags)" EchoOff="true" />
+    </Target>
+
+    <!-- Clean Files -->
+    <Target Name="clean">
+        <Message Text="Cleaning $(MSBuildProjectName)." />
+        <Delete Files="%(Source.Object)" />
+        <Delete Files="$(TargetObject)" />
+    </Target>
+
+    <!-- Create necessary files -->
+    <Target Name="check-env">
+        <MakeDir Directories="$(BuildPath)" />
+        <MakeDir Directories="@(Source -> '%(ObjectPath)')" />
+    </Target>
+
+</Project>
