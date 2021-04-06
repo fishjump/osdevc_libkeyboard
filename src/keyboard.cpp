@@ -4,13 +4,13 @@ namespace {
 
 using namespace system::io::entity;
 
-const size_t MAX_BUFFER_SIZE = 4096;
-uint32_t     bufferBegin     = 0;
-uint32_t     bufferEnd       = 1;
-size_t       bufferCount     = 0;
-
-KeyboardEvent buffer[MAX_BUFFER_SIZE];
-KeyStatus     capsLockStatus = KeyStatus::Up;
+const size_t          MAX_BUFFER_SIZE = 4096;
+uint32_t              bufferBegin     = 0;
+uint32_t              bufferEnd       = 1;
+size_t                bufferCount     = 0;
+KeyboardEvent         buffer[MAX_BUFFER_SIZE];
+KeyStatus             capsLockStatus = KeyStatus::Up;
+KeyboardEventHandler *handler        = nullptr;
 
 const KeyboardEvent keyboardScanCodeTable[] = {
     {Key::None, KeyStatus::Unknown},          // 0x00 <undefined>
@@ -88,7 +88,20 @@ const KeyboardEvent keyboardScanCodeTable[] = {
 
 namespace system::io::entity {
 
-void system::io::entity::Keyboard::enqueue(uint8_t keyCode) {
+void Keyboard::setHandler(KeyboardEventHandler _handler) {
+    handler = _handler;
+}
+
+void Keyboard::serve() {
+    while(!empty()) {
+        if(handler != nullptr) {
+            KeyboardEvent event = dequeue();
+            handler(event);
+        }
+    }
+}
+
+void Keyboard::enqueue(uint8_t keyCode) {
     if(bufferCount < MAX_BUFFER_SIZE) {
         buffer[bufferEnd] = keyboardScanCodeTable[keyCode];
         bufferEnd         = (bufferEnd + 1) % MAX_BUFFER_SIZE;
@@ -96,7 +109,7 @@ void system::io::entity::Keyboard::enqueue(uint8_t keyCode) {
     }
 }
 
-KeyboardEvent system::io::entity::Keyboard::dequeue() {
+KeyboardEvent Keyboard::dequeue() {
     if(!empty()) {
         bufferCount--;
         KeyboardEvent event = front();
@@ -107,20 +120,20 @@ KeyboardEvent system::io::entity::Keyboard::dequeue() {
     return {Key::None, KeyStatus::Unknown, KeyStatus::Unknown};
 }
 
-entity::KeyboardEvent system::io::entity::Keyboard::front() const {
+KeyboardEvent Keyboard::front() const {
     KeyboardEvent event = buffer[bufferBegin];
     return {event.key, event.status, capsLockStatus};
 }
 
-entity::KeyboardEvent system::io::entity::Keyboard::end() const {
+KeyboardEvent Keyboard::end() const {
     return buffer[(bufferEnd - 1) % MAX_BUFFER_SIZE];
 }
 
-bool system::io::entity::Keyboard::empty() const {
+bool Keyboard::empty() const {
     return 0 == bufferCount;
 }
 
-size_t system::io::entity::Keyboard::count() const {
+size_t Keyboard::count() const {
     return bufferCount;
 }
 

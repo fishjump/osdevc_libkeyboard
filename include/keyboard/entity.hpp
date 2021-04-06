@@ -188,9 +188,14 @@ struct KeyboardEvent {
     KeyStatus capsLockStatus;
 };
 
+using KeyboardEventHandler = void(KeyboardEvent event);
+
 class Keyboard {
 public:
     Keyboard() = delete;
+
+    void setHandler(KeyboardEventHandler handler);
+    void serve();
 
     void          enqueue(uint8_t keyCode);
     KeyboardEvent dequeue();
