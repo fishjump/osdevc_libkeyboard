@@ -6,7 +6,7 @@ using namespace system::io::entity;
 
 const size_t          MAX_BUFFER_SIZE = 4096;
 uint32_t              bufferBegin     = 0;
-uint32_t              bufferEnd       = 1;
+uint32_t              bufferEnd       = 0;
 size_t                bufferCount     = 0;
 KeyboardEvent         buffer[MAX_BUFFER_SIZE];
 KeyStatus             capsLockStatus = KeyStatus::Up;
@@ -97,8 +97,8 @@ void Keyboard::setHandler(KeyboardEventHandler _handler) {
 
 void Keyboard::serve() {
     while(!empty()) {
+        KeyboardEvent event = dequeue();
         if(handler != nullptr) {
-            KeyboardEvent event = dequeue();
             handler(event);
         }
     }
