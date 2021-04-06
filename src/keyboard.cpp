@@ -84,6 +84,9 @@ const KeyboardEvent keyboardScanCodeTable[] = {
     {Key::F10, KeyStatus::Down},              // 0x44 F10 pressed
 };
 
+const uint32_t keyboardScanCodeTableSize =
+    sizeof(keyboardScanCodeTable) / sizeof(KeyboardEvent);
+
 } // namespace
 
 namespace system::io::entity {
@@ -101,8 +104,17 @@ void Keyboard::serve() {
     }
 }
 
+void Keyboard::setCapsLockStatus(KeyStatus status) {
+    capsLockStatus = status;
+}
+
+KeyStatus Keyboard::getCapsLockStatus() const {
+    return capsLockStatus;
+}
+
 void Keyboard::enqueue(uint8_t keyCode) {
-    if(bufferCount < MAX_BUFFER_SIZE) {
+    if(keyCode < keyboardScanCodeTableSize
+       && bufferCount < MAX_BUFFER_SIZE) {
         buffer[bufferEnd] = keyboardScanCodeTable[keyCode];
         bufferEnd         = (bufferEnd + 1) % MAX_BUFFER_SIZE;
         bufferCount++;
@@ -117,12 +129,12 @@ KeyboardEvent Keyboard::dequeue() {
         return event;
     }
 
-    return {Key::None, KeyStatus::Unknown, KeyStatus::Unknown};
+    return {Key::None, KeyStatus::Unknown};
 }
 
 KeyboardEvent Keyboard::front() const {
     KeyboardEvent event = buffer[bufferBegin];
-    return {event.key, event.status, capsLockStatus};
+    return event;
 }
 
 KeyboardEvent Keyboard::end() const {

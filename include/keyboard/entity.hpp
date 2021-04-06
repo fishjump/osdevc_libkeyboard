@@ -185,7 +185,6 @@ enum class Key : uint8_t {
 struct KeyboardEvent {
     Key       key;
     KeyStatus status;
-    KeyStatus capsLockStatus;
 };
 
 using KeyboardEventHandler = void(KeyboardEvent event);
@@ -196,6 +195,9 @@ public:
 
     void setHandler(KeyboardEventHandler handler);
     void serve();
+
+    void      setCapsLockStatus(KeyStatus status);
+    KeyStatus getCapsLockStatus() const;
 
     void          enqueue(uint8_t keyCode);
     KeyboardEvent dequeue();
